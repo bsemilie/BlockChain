@@ -5,7 +5,7 @@ import json
 
 import coincurve  # faster than ecdsa to compute public key from private key
 
-max_32bitvalue = 0xffffffff
+max_32bitvalue = 0xFFFFFFFF
 bitcoin_wifprefix = 0x80
 bitcoin_addrprefix = 0x00
 
@@ -20,12 +20,12 @@ def gen_private_key():
 
     maxval = curveorder()
     p = urandom(32)  # almost any 32 random bytes array is a private key
-    pint = int.from_bytes(p, 'big')
+    pint = int.from_bytes(p, "big")
 
-    while(pint > maxval or pint < 0):  # a private key cannot be zero (or below)
+    while pint > maxval or pint < 0:  # a private key cannot be zero (or below)
         # and should be lower than the maximal value of the eliptic curve
         p = urandom(32)
-        pint = int.from_bytes(p, 'big')
+        pint = int.from_bytes(p, "big")
     return p
 
 
@@ -42,9 +42,8 @@ def pub_to_pub(pub, compressed=True):
 
 
 class Account:
-
     def __init__(self, private=None):
-        if(private is None):  # need to check type of input (bytes only)
+        if private is None:  # need to check type of input (bytes only)
             private = gen_private_key()
         self.pk = private
         self.curve = "ecdsa-secp256k1"
@@ -64,25 +63,30 @@ class Account:
 
     def to_file(self, file_name):
         key = {"private_key": self.private_key()}
-        with open(file_name, 'w') as key_file:
+        with open(file_name, "w") as key_file:
             json.dump(key, key_file)
 
     def sign(self, message):
-        signature = coincurve.PrivateKey(
-            self.pk).sign_recoverable(message.encode())
+        signature = coincurve.PrivateKey(self.pk).sign_recoverable(
+            message.encode()
+        )
         return signature
 
 
-def hash256(x): return hashlib.sha256(x).digest()
+def hash256(x):
+    return hashlib.sha256(x).digest()
 
 
-def doublehash(x): return hash256(hash256(x))
+def doublehash(x):
+    return hash256(hash256(x))
 
 
-def ripemd160(x): return hashlib.new('ripemd160', data=x).digest()
+def ripemd160(x):
+    return hashlib.new("ripemd160", data=x).digest()
 
 
-def hash160(x): return ripemd160(hash256(x))
+def hash160(x):
+    return ripemd160(hash256(x))
 
 
 def wif_to_priv(wif, compressed=True):
@@ -94,7 +98,9 @@ def wif_to_priv(wif, compressed=True):
     return pkeychecked[1:-5] if compressed else pkeychecked[1:-4]
 
 
-def public_to_P2PKH(public_key, compressed=True, network_addrprefix=bitcoin_wifprefix):
+def public_to_P2PKH(
+    public_key, compressed=True, network_addrprefix=bitcoin_wifprefix
+):
     public = pub_to_pub(public_key, compressed=True)
     encrypted_pub = bytes([network_addrprefix]) + hash160(public)
     check = doublehash(encrypted_pub)
@@ -115,13 +121,13 @@ class BitcoinAccount(Account):
         return cls(wif_to_priv(wif))
 
     def to_file(self, file_name=None):
-        if(file_name == None):
+        if file_name == None:
             file_name = self.to_address() + ".json"
         super().to_file(file_name)  #  check parameter less
 
     def to_wif(self, compressed=True):
         s1 = bytes([self.network_wifprefix]) + self.pk
-        if(compressed):
+        if compressed:
             s1 += bytes([0x01])  # add compressed flag byte
         checksum = doublehash(s1)[:4]  # first 4 bytes = checksum
         wif = s1 + checksum
@@ -133,19 +139,27 @@ class BitcoinAccount(Account):
 
     def to_P2PKH(self, compressed=True):
         pub = self.to_pub(compressed=compressed)
-        return public_to_P2PKH(pub, compressed=True, network_addrprefix=self.network_wifprefix)
+        return public_to_P2PKH(
+            pub, compressed=True, network_addrprefix=self.network_wifprefix
+        )
 
     def to_address(self, compressed=True):
         return self.to_P2PKH(compressed=compressed)
 
     def __repr__(self, compressed=True):
-        string_val = "WIF: " + str(self.to_wif(compressed)) + "\n" + \
-            "Address: " + self.to_address(compressed)
+        string_val = (
+            "WIF: "
+            + str(self.to_wif(compressed))
+            + "\n"
+            + "Address: "
+            + self.to_address(compressed)
+        )
         return string_val
 
 
 def verify_signature(signature, message, address):
     public_key = coincurve.PublicKey.from_signature_and_message(
-        bytes.fromhex(signature), message.encode()).format()
+        bytes.fromhex(signature), message.encode()
+    ).format()
     address_computed = public_to_P2PKH(public_key)
     return address_computed == address

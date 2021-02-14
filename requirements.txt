@@ -1,0 +1,4 @@
+coincurve==15.0.0
+base58==2.1.0
+PySide2==5.15.2
+pyzmq==22.0.3

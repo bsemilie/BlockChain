@@ -1,4 +1,4 @@
-from key import Account, verify_signature
+from key import verify_signature
 
 
 class Transaction:
