@@ -1,14 +1,12 @@
 ![Global Design](desktop_app.png)
 
 
-Need PySide2 and zmq
+pip install -r requirements.txt
 
-pip install PySide2
-
-pip install pyzmq
+default PORT_NUMBER is 5000
 
 ```
 ip addr show (copy the ip address into the app.py file)
-python app.py
+python app.py PORT_NUMBER
 ```
 
