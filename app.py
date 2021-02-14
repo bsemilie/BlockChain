@@ -179,10 +179,7 @@ class Peer_Dialog(QtWidgets.QDialog):
 class MyWidget(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
-        # self.myThread = PeersThread(self)
-        # self.myThread.start()
 
-        # self.setWindowTitle('Blockchain')
         global ConnectionWrite
 
         self.text_address = QtWidgets.QLabel("My address: ")
