@@ -5,4 +5,6 @@ from transaction import Transaction
 
 
 class Blockchain:
-    pass
+    def __init(self):
+        self.chain = []
+    
