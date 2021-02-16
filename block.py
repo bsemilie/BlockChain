@@ -5,13 +5,15 @@ from key import verify_signature
 
 
 class Block:
-    def __init__(self, blockNumber, hash):
+    def __init__(self, blockNumber, hash, ):
         self.transactions = []
+    
         self.timestamp = 0
         self.blockNumber = blockNumber
         self.last_hash = hash
         self.hashval = ""
         self.Nonce = 0
+        self.minerName = ""
         
 
     def add_transaction(self,transaction: Transaction):
@@ -60,12 +62,35 @@ class Block:
                     "Previous hash: " + str(self.last_hash) + "\n" + \
                         "Hash: " + str(self.hashval) + "\n" + \
                             "Miner: " + str(self.minerName) + "\n"
+        return string 
                         
 
-        
+    def to_dict(self):
+
+        block_dict = {}
+        block_dict["Block number"] = self.blockNumber
+
+        block_dict["nonce"] = self.Nonce
+
+        block_dict["timestamp"] = self.timestamp
+
+        block_dict["miner"] = self.minerName
+
+        block_dict["transactions"] = []
+
+        for elem in self.transactions:
+
+            block_dict["transactions"].append(elem.to_dict())
+
+        block_dict["Last hash"] = self.last_hash
+
+        block_dict["hashval"] = self.hashval
+
+
+        return block_dict
         
 
-        return string   
+          
             
     
     
