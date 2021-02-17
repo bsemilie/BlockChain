@@ -56,7 +56,16 @@ ConnectionWrite = Connection()
 
 
 def reading_network():
-    pass
+    global Blockchain
+    global ConnectionWrite
+    while True:
+        [topic_val, msg_val] = socket_sub.recv_multipart()
+        topic = topic_val.decode()
+        chain_data = json.loads(msg_val.decode())
+        if(topic == "chain"):
+            if(blockchain and len(blockchain.length) < chain_data["length"]) or blockchain is None:
+                blockchain = Blockchain(difficulty, chain_data["chain"])
+        ConnectionWrite.write_block.emit(str(blockchain.chain[-1]))
 
 
 class Chain_Dialog(QtWidgets.QDialog):
@@ -130,7 +139,8 @@ class Tx_Dialog(QtWidgets.QDialog):
             return False
 
     def working_click(self):
-        # add send tx to other peers function here
+        pending_transaction = self.get_values()
+        blockchain.add_transaction(address, pending_transaction["address"], pending_transaction["amount"])
         self.accept()
 
 
@@ -265,8 +275,18 @@ class MyWidget(QtWidgets.QWidget):
             msg.exec_()
 
     def mine_call(self):
-        # need to call the mining function
         global blockchain
+        if not blockchain:
+            blockchain = Blockchain(difficulty)
+            blockchain.create_genesis_block()
+        else:
+            blockchain.mine_block()
+
+        self.define_block(blockchain.chain[-1])
+        chain = blockchain.to_dict()
+        chain_data = json.dumps({"length": len(chain), "chain": chain}).encode()
+
+        socket.send_multipart([b'chain',chain_data])
 
     @Slot(str)
     def get_block_str(self, block_str):
