@@ -7,8 +7,8 @@ class Blockchain:
     def __init__(self, difficulty, chain=[], block_reward=50):
         self.chain = []
         for elem in chain:
-            self.chain.append(elem)
-
+            newBlock = Block(elem["Block number"], elem["Last hash"], elem["nonce"], elem["timestamp"], elem["transactions"], elem["hashval"], elem["miner"])
+            self.chain.append(newBlock)
         self.difficulty = difficulty
         self.transactions_pool = []
         self.block_reward = block_reward
