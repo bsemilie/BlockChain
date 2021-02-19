@@ -7,7 +7,7 @@ class Blockchain:
     def __init__(self, difficulty, chain=[], block_reward=50):
         self.chain = []
         for elem in chain:
-            newBlock = Block(elem["Block number"], elem["Last hash"], elem["nonce"], elem["timestamp"], elem["transactions"], elem["hashval"], elem["miner"])
+            newBlock = Block(elem["Block number"], elem["Last hash"], elem["nonce"], elem["timestamp"], elem["transactions"], elem["hashval"], elem["miner"], elem["signature"])
             self.chain.append(newBlock)
         self.difficulty = difficulty
         self.transactions_pool = []
@@ -18,17 +18,18 @@ class Blockchain:
     def last_block(self):
         return self.chain[-1]
 
-    def create_genesis_block(self):
+    def create_genesis_block(self, account):
         genesis_block = Block(0,"")
 
         new_tx = Transaction("network", "me", self.block_reward, time.time() )
         genesis_block.add_transaction(new_tx)
-        nonce = genesis_block.mine(self.difficulty)
+        nonce = genesis_block.mine(self.difficulty, account)
         self.chain.append(genesis_block)
 
 
-    def add_transaction(self, sender, receiver, amount):
+    def add_transaction(self, sender, receiver, amount,account):
         transaction = Transaction(sender, receiver, amount, time.time())
+        transaction.sign(account)
         self.transactions_pool.append(transaction)
 
 
@@ -60,7 +61,7 @@ class Blockchain:
         self.chain.append(block)
 
 
-    def mine_block(self):
+    def mine_block(self, account):
         if not self.transactions_pool:
             print("ERROR: no transactions waiting")
         last_block = self.last_block
@@ -72,7 +73,7 @@ class Blockchain:
 
         new_tx = Transaction("network", "me", self.block_reward, time.time())
         new_block.add_transaction(new_tx)
-        nonce = new_block.mine(self.difficulty)
+        nonce = new_block.mine(self.difficulty,account)
 
         self.add_block(new_block)
 

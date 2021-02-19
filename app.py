@@ -24,7 +24,7 @@ wallet.to_file(file_name)
 
 #  blockchain data
 
-difficulty = 3
+difficulty = 4
 blockchain = None
 peers = set()
 
@@ -52,6 +52,8 @@ class Connection(QObject):
     write_block = Signal(str)
 
 
+
+
 ConnectionWrite = Connection()
 
 
@@ -61,11 +63,18 @@ def reading_network():
     while True:
         [topic_val, msg_val] = socket_sub.recv_multipart()
         topic = topic_val.decode()
-        chain_data = json.loads(msg_val.decode())
+
         if(topic == "chain"):
+            chain_data = json.loads(msg_val.decode())
             if(blockchain and len(blockchain.chain) < chain_data["length"]) or blockchain is None:
                 blockchain = Blockchain(difficulty, chain_data["chain"])
+
+                for block in blockchain.chain:
+                    if(block.verify_block()!= true):
+                        print("ERROR: block not valid")
+                        return
                 ConnectionWrite.write_block.emit(str(blockchain.chain[-1]))
+
 
 
 
@@ -133,7 +142,8 @@ class Tx_Dialog(QtWidgets.QDialog):
     def get_values(self):
         if self.tx_address and self.tx_amount:
             return {
-                "address": self.tx_address.text(),
+                "sender": address,
+                "receiver": self.tx_address.text(),
                 "amount": int(self.tx_amount.text()),
             }
         else:
@@ -141,7 +151,9 @@ class Tx_Dialog(QtWidgets.QDialog):
 
     def working_click(self):
         pending_transaction = self.get_values()
-        blockchain.add_transaction(address, pending_transaction["address"], pending_transaction["amount"])
+        blockchain.add_transaction(pending_transaction["sender"], pending_transaction["receiver"], pending_transaction["amount"], wallet)
+        tx_data = json.dumps({"sender": pending_transaction["sender"], "receiver": pending_transaction["receiver"], "amount": pending_transaction["amount"]}).encode()
+        socket.send_multipart([b'transaction',tx_data])
         self.accept()
 
 
@@ -279,9 +291,9 @@ class MyWidget(QtWidgets.QWidget):
         global blockchain
         if not blockchain:
             blockchain = Blockchain(difficulty)
-            blockchain.create_genesis_block()
+            blockchain.create_genesis_block(wallet)
         else:
-            blockchain.mine_block()
+            blockchain.mine_block(wallet)
 
         self.define_block(blockchain.chain[-1])
         chain = blockchain.to_dict()
@@ -321,8 +333,8 @@ class MyWidget(QtWidgets.QWidget):
 
     def define_tx(self, elem):
         text = (
-            "Tx: { address : "
-            + elem["address"]
+            "Tx: { sender: " + str(elem["sender"]) + ", receiver : "
+            + elem["receiver"]
             + ", amount : "
             + str(elem["amount"])
             + " }"
